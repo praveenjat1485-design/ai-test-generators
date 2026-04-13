@@ -3,193 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Exam Master Pro - प्रवीण</title>
+    <title>Ultra-Fast AI Test Master</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     <style>
-        :root { 
-            --primary: #1e3799; --success: #27ae60; --danger: #e74c3c; 
-            --bg: #f5f6fa; --card: #ffffff; --text: #333333;
-        }
-        /* डार्क मोड कलर्स */
-        body.dark-mode { 
-            --bg: #1a1a2e; --card: #16213e; --text: #e94560; --primary: #0f3460;
-        }
-
+        :root { --primary: #1e3799; --success: #27ae60; --danger: #e74c3c; --bg: #f5f6fa; --card: #ffffff; --text: #333; }
+        body.dark-mode { --bg: #1a1a2e; --card: #16213e; --text: #f5f6fa; --primary: #0f3460; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; transition: 0.3s; }
         .container { max-width: 800px; margin: auto; background: var(--card); padding: 25px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); position: relative; }
-        
-        .header-controls { position: absolute; top: 15px; right: 15px; display: flex; gap: 10px; }
-        .card { border: 2px dashed #ddd; padding: 30px; border-radius: 15px; text-align: center; margin-bottom: 20px; background: var(--card); }
-        .saved-tests { text-align: left; margin-top: 20px; border-top: 2px solid #eee; padding-top: 20px; }
-        .test-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.05); padding: 12px; margin: 8px 0; border-radius: 10px; }
-        
-        .input-name { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; }
-        .btn { padding: 12px 25px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; }
-        .btn-primary { background: #1e3799; color: white; width: 100%; }
-        .btn-theme { background: #555; color: white; padding: 5px 15px; font-size: 12px; }
-        
+        .card-upload { border: 3px dashed #3498db; padding: 30px; border-radius: 15px; text-align: center; background: rgba(52, 152, 219, 0.05); cursor: pointer; }
+        .loader-box { margin-top: 20px; padding: 15px; background: #eee; border-radius: 10px; display: none; }
+        .progress-fill { height: 10px; background: var(--success); width: 0%; border-radius: 5px; transition: 0.3s; }
+        .btn { padding: 12px 25px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s; }
+        .btn-start { background: var(--primary); color: white; margin-top: 15px; }
+        .test-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.05); padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #ddd; }
         .opt { display: block; width: 100%; padding: 15px; margin: 10px 0; border: 2px solid #eee; border-radius: 12px; cursor: pointer; text-align: left; background: var(--card); color: var(--text); font-size: 17px; }
         .correct { background: #d4edda !important; color: #155724; border-color: #28a745 !important; }
         .wrong { background: #f8d7da !important; color: #721c24; border-color: #dc3545 !important; }
-        
-        .progress-container { height: 8px; background: #eee; border-radius: 4px; margin: 15px 0; overflow: hidden; }
-        .progress-bar { height: 100%; background: #27ae60; width: 0%; transition: 0.4s; }
         .hidden { display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header-controls">
-        <button class="btn btn-theme" onclick="toggleDarkMode()">🌓 Mode</button>
-    </div>
-
-    <h1 style="text-align:center; margin-top:0;">🚀 AI Exam Portal</h1>
+    <div style="text-align:right;"><button class="btn" style="width:auto; padding:5px 15px; font-size:12px;" onclick="toggleTheme()">🌓 Mode</button></div>
+    <h1 style="text-align:center;">⚡ Ultra-Fast AI Exam</h1>
 
     <div id="dashboard">
-        <input type="text" id="userName" class="input-name" placeholder="अपना नाम यहाँ लिखें..." value="Student">
+        <input type="text" id="studentName" style="width:100%; padding:12px; margin-bottom:15px; border-radius:8px; border:1px solid #ddd;" placeholder="अपना नाम लिखें...">
         
-        <div class="card" onclick="document.getElementById('fileInput').click()">
-            <h2 style="margin:0;">📸 नया टेस्ट स्कैन करें</h2>
-            <p>फोटो अपलोड करके टेस्ट बनाएँ</p>
+        <div class="card-upload" onclick="document.getElementById('fileInput').click()">
+            <h2 style="margin:0;">📸 एक साथ कई फोटो चुनें</h2>
+            <p>10-20 फोटो एक साथ डालें, यह अब तेज़ काम करेगा!</p>
             <input type="file" id="fileInput" multiple accept="image/*" class="hidden">
         </div>
-        
-        <div id="loader" class="hidden">
-            <p id="status-text">AI पढ़ रहा है...</p>
-            <div class="progress-container"><div id="load-progress" class="progress-bar"></div></div>
+
+        <div id="loader" class="loader-box">
+            <p id="status">AI प्रोसेसिंग शुरू हो रही है...</p>
+            <div style="background:#ddd; border-radius:5px;"><div id="progress" class="progress-fill"></div></div>
         </div>
 
-        <div class="saved-tests">
-            <h3>📁 आपके टेस्ट लाइब्रेरी</h3>
+        <div style="margin-top:20px;">
+            <h3>📁 सेव किए गए टेस्ट</h3>
             <div id="saved-list"></div>
         </div>
     </div>
 
-    <div id="quiz-screen" class="hidden">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <b id="test-title">Test</b>
-            <span id="score-display">स्कोर: 0</span>
-        </div>
-        <div class="progress-container"><div id="quiz-progress" class="progress-bar"></div></div>
-        
-        <div class="q-card">
-            <h3 id="q-text">Sawal...</h3>
+    <div id="quiz-area" class="hidden">
+        <h3 id="test-title">Test</h3>
+        <p>स्कोर: <b id="live-score">0</b></p>
+        <div class="opt-card">
+            <h2 id="q-text">Sawal...</h2>
             <div id="options-box"></div>
         </div>
     </div>
 
-    <div id="result-screen" class="hidden" style="text-align:center;">
-        <h1 id="user-greeting">बधाई हो!</h1>
-        <h2>आपका स्कोर कार्ड</h2>
-        <h1 id="final-score" style="font-size:60px; color:#27ae60;">0</h1>
-        <button class="btn btn-primary" onclick="location.reload()">वापस जाएँ</button>
+    <div id="result-area" class="hidden" style="text-align:center;">
+        <h1 id="greet">बधाई हो!</h1>
+        <h1 id="final-score" style="font-size:60px; color:var(--success);">0</h1>
+        <button class="btn btn-start" onclick="location.reload()">वापस जाएँ</button>
     </div>
 </div>
 
 <script>
     let currentQuestions = [];
-    let currentIdx = 0;
-    let score = 0;
+    let currentIdx = 0, score = 0;
 
-    function toggleDarkMode() {
-        document.body.classList.toggle('dark-mode');
-        localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
-    }
+    function toggleTheme() { document.body.classList.toggle('dark-mode'); }
 
-    if(localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+    async function processImages(files) {
+        const loader = document.getElementById('loader');
+        const status = document.getElementById('status');
+        const bar = document.getElementById('progress');
+        loader.style.display = 'block';
 
-    function displaySavedTests() {
-        const list = document.getElementById('saved-list');
-        const tests = JSON.parse(localStorage.getItem('myTests') || '[]');
-        if(tests.length === 0) {
-            list.innerHTML = "<p>कोई सेव टेस्ट नहीं मिला।</p>";
-            return;
+        let allExtracted = [];
+        
+        // Tesseract Worker Setup (Speed Boost)
+        const worker = await Tesseract.createWorker({
+            logger: m => { if(m.status === 'recognizing text') status.innerText = `स्कैनिंग: ${(m.progress*100).toFixed(0)}%`; }
+        });
+        await worker.loadLanguage('hin+eng');
+        await worker.initialize('hin+eng');
+
+        for (let i = 0; i < files.length; i++) {
+            status.innerText = `पेज ${i+1}/${files.length} पढ़ा जा रहा है...`;
+            bar.style.width = ((i+1)/files.length * 100) + "%";
+            
+            const { data: { text } } = await worker.recognize(files[i]);
+            const parsed = parseText(text);
+            allExtracted = allExtracted.concat(parsed);
         }
-        list.innerHTML = tests.map((t, i) => `
-            <div class="test-item">
-                <span><b>${t.name}</b> (${t.data.length} Q)</span>
-                <div>
-                    <button class="btn" style="background:#27ae60; color:white; padding:5px 10px;" onclick="startTest(${i})">Start</button>
-                    <button class="btn" style="background:#e74c3c; color:white; padding:5px 10px;" onclick="deleteTest(${i})">🗑️</button>
-                </div>
-            </div>
-        `).join('');
+
+        await worker.terminate();
+
+        if(allExtracted.length > 0) {
+            saveAndReload(allExtracted);
+        } else {
+            alert("फोटो साफ़ नहीं थी, फिर से कोशिश करें।");
+            location.reload();
+        }
     }
 
-    document.getElementById('fileInput').onchange = async (e) => {
-        const files = e.target.files;
-        if(!files.length) return;
-        document.getElementById('loader').classList.remove('hidden');
-        let extracted = [];
-        for(let i=0; i<files.length; i++) {
-            document.getElementById('status-text').innerText = `स्कैनिंग पेज ${i+1}/${files.length}...`;
-            document.getElementById('load-progress').style.width = ((i+1)/files.length * 100) + "%";
-            const { data: { text } } = await Tesseract.recognize(files[i], 'hin+eng');
-            const lines = text.split('\n').filter(l => l.trim().length > 10);
-            for(let j=0; j<lines.length; j++) {
-                if(lines[j].includes('?') || lines[j].length > 25) {
-                    extracted.push({ t: lines[j], o: [lines[j+1], lines[j+2], lines[j+3], lines[j+4]].filter(x => x), a: lines[j+1] });
-                    j += 4;
-                }
+    function parseText(text) {
+        const lines = text.split('\n').filter(l => l.trim().length > 10);
+        let qs = [];
+        for(let i=0; i<lines.length; i++) {
+            if(lines[i].includes('?') || lines[i].length > 25) {
+                qs.push({ t: lines[i], o: [lines[i+1], lines[i+2], lines[i+3], lines[i+4]].filter(x => x), a: lines[i+1] });
+                i += 4;
             }
         }
-        const tests = JSON.parse(localStorage.getItem('myTests') || '[]');
-        tests.push({ name: "Test " + (tests.length + 1), data: extracted });
-        localStorage.setItem('myTests', JSON.stringify(tests));
-        location.reload();
-    };
-
-    function startTest(i) {
-        const tests = JSON.parse(localStorage.getItem('myTests') || '[]');
-        currentQuestions = tests[i].data;
-        document.getElementById('test-title').innerText = tests[i].name;
-        document.getElementById('dashboard').classList.add('hidden');
-        document.getElementById('quiz-screen').classList.remove('hidden');
-        loadQuestion();
+        return qs;
     }
 
-    function loadQuestion() {
+    function saveAndReload(data) {
+        const tests = JSON.parse(localStorage.getItem('ultraTests') || '[]');
+        tests.push({ name: "Test " + (tests.length + 1), data: data });
+        localStorage.setItem('ultraTests', JSON.stringify(tests));
+        location.reload();
+    }
+
+    document.getElementById('fileInput').onchange = e => processImages(e.target.files);
+
+    function startTest(i) {
+        const tests = JSON.parse(localStorage.getItem('ultraTests') || '[]');
+        currentQuestions = tests[i].data;
+        document.getElementById('dashboard').classList.add('hidden');
+        document.getElementById('quiz-area').classList.remove('hidden');
+        loadQ();
+    }
+
+    function loadQ() {
         const q = currentQuestions[currentIdx];
         document.getElementById('q-text').innerText = `${currentIdx+1}. ${q.t}`;
-        document.getElementById('quiz-progress').style.width = ((currentIdx+1)/currentQuestions.length * 100) + "%";
         const box = document.getElementById('options-box');
         box.innerHTML = "";
         q.o.forEach(opt => {
             const b = document.createElement('button');
             b.className = 'opt'; b.innerText = opt;
             b.onclick = () => {
-                const all = document.querySelectorAll('.opt');
-                all.forEach(btn => btn.disabled = true);
                 if(opt === q.a) { b.classList.add('correct'); score++; }
-                else { b.classList.add('wrong'); all.forEach(btn => { if(btn.innerText === q.a) btn.classList.add('correct'); }); }
-                document.getElementById('score-display').innerText = `स्कोर: ${score}`;
+                else { b.classList.add('wrong'); }
                 setTimeout(() => {
                     currentIdx++;
-                    if(currentIdx < currentQuestions.length) loadQuestion();
+                    if(currentIdx < currentQuestions.length) loadQ();
                     else showResult();
-                }, 1200);
+                }, 1000);
+                document.getElementById('live-score').innerText = score;
             };
             box.appendChild(b);
         });
     }
 
     function showResult() {
-        document.getElementById('quiz-screen').classList.add('hidden');
-        document.getElementById('result-screen').classList.remove('hidden');
-        document.getElementById('user-greeting').innerText = `शानदार, ${document.getElementById('userName').value}!`;
-        document.getElementById('final-score').innerText = `${score} / ${currentQuestions.length}`;
+        document.getElementById('quiz-area').classList.add('hidden');
+        document.getElementById('result-area').classList.remove('hidden');
+        document.getElementById('greet').innerText = "शानदार, " + document.getElementById('studentName').value;
+        document.getElementById('final-score').innerText = score + " / " + currentQuestions.length;
     }
 
-    function deleteTest(i) {
-        let tests = JSON.parse(localStorage.getItem('myTests') || '[]');
-        tests.splice(i, 1);
-        localStorage.setItem('myTests', JSON.stringify(tests));
-        displaySavedTests();
+    function displayTests() {
+        const list = document.getElementById('saved-list');
+        const tests = JSON.parse(localStorage.getItem('ultraTests') || '[]');
+        list.innerHTML = tests.map((t, i) => `
+            <div class="test-item">
+                <span><b>${t.name}</b> (${t.data.length} प्रश्न)</span>
+                <button class="btn" style="width:auto; background:var(--success); color:white;" onclick="startTest(${i})">शुरू करें</button>
+            </div>
+        `).join('');
     }
-
-    displaySavedTests();
+    
+    displayTests();
 </script>
 </body>
-    </html>
-                                            
+</html>
