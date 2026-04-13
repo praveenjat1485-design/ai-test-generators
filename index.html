@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Photo Quiz Maker</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+    <style>
+        :root { --primary: #1e3799; --accent: #eb2f06; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 700px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
+        h1 { color: var(--primary); }
+        .upload-section { border: 2px dashed #3498db; padding: 30px; border-radius: 12px; background: #f9feff; margin-bottom: 20px; }
+        #imageInput { margin: 15px 0; }
+        .status { color: #d63031; font-weight: bold; margin: 10px 0; }
+        .btn { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-size: 16px; width: 100%; font-weight: bold; }
+        .btn:disabled { background: #ccc; }
+        .quiz-card { background: #fff; border: 1px solid #ddd; border-radius: 12px; padding: 20px; margin-top: 20px; text-align: left; }
+        .opt { display: block; width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; background: #fff; text-align: left; }
+        .correct { background: #d4edda !important; border-color: #28a745; }
+        .wrong { background: #f8d7da !important; border-color: #dc3545; }
+        .hidden { display: none; }
+        #loading { display: none; color: #1e3799; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📸 AI Photo Quiz Maker</h1>
+    
+    <div id="setup">
+        <div class="upload-section">
+            <p>अपनी किताब की फ़ोटो अपलोड करें</p>
+            <input type="file" id="imageInput" accept="image/*">
+            <p style="font-size: 12px; color: #666;">(साफ़ फ़ोटो अपलोड करें जिसमें प्रश्न और विकल्प हों)</p>
+        </div>
+        <button id="startBtn" class="btn" onclick="processImage()">फ़ोटो से टेस्ट बनाएँ</button>
+        <div id="loading">⏳ फ़ोटो पढ़ी जा रही है... कृपया रुकें...</div>
+    </div>
+
+    <div id="quiz-area" class="hidden">
+        <div class="quiz-card">
+            <b id="q-text"></b>
+            <div id="options-box"></div>
+        </div>
+        <div id="feedback" style="margin-top: 15px; font-weight: bold;"></div>
+    </div>
+</div>
+
+<script>
+    let questions = [];
+    let currentIdx = 0;
+
+    async function processImage() {
+        const file = document.getElementById('imageInput').files[0];
+        if (!file) { alert("कृपया फ़ोटो चुनें!"); return; }
+
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('startBtn').disabled = true;
+
+        try {
+            // Tesseract AI का उपयोग करके फोटो से टेक्स्ट पढ़ना
+            const { data: { text } } = await Tesseract.recognize(file, 'hin+eng');
+            parseText(text);
+        } catch (e) {
+            alert("Error: " + e.message);
+        } finally {
+            document.getElementById('loading').style.display = 'none';
+        }
+    }
+
+    function parseText(rawText) {
+        // टेक्स्ट को लाइनों में बाँटना
+        const lines = rawText.split('\n').filter(l => l.trim().length > 3);
+        questions = [];
+
+        for (let i = 0; i < lines.length; i++) {
+            // अगर लाइन में '?' है या वह लम्बी है तो उसे प्रश्न मानेंगे
+            if (lines[i].includes('?') || lines[i].length > 15) {
+                let qObj = {
+                    q: lines[i],
+                    opts: [lines[i+1], lines[i+2], lines[i+3], lines[i+4]].filter(o => o),
+                    correct: lines[i+1] // डिफ़ॉल्ट रूप से पहली लाइन सही उत्तर
+                };
+                if(qObj.opts.length >= 2) {
+                    questions.push(qObj);
+                    i += 4;
+                }
+            }
+        }
+
+        if (questions.length > 0) {
+            document.getElementById('setup').classList.add('hidden');
+            document.getElementById('quiz-area').classList.remove('hidden');
+            loadQ();
+        } else {
+            alert("क्षमा करें, फोटो में प्रश्न साफ़ नहीं मिले। कृपया साफ़ फोटो लें।");
+            document.getElementById('startBtn').disabled = false;
+        }
+    }
+
+    function loadQ() {
+        const data = questions[currentIdx];
+        document.getElementById('q-text').innerText = `${currentIdx + 1}. ${data.q}`;
+        document.getElementById('feedback').innerText = "";
+        const box = document.getElementById('options-box');
+        box.innerHTML = "";
+
+        data.opts.forEach(o => {
+            const b = document.createElement('button');
+            b.className = 'opt';
+            b.innerText = o;
+            b.onclick = () => {
+                if(o === data.correct) {
+                    b.classList.add('correct');
+                    document.getElementById('feedback').innerText = "✅ सही जवाब!";
+                } else {
+                    b.classList.add('wrong');
+                    document.getElementById('feedback').innerText = "❌ गलत!";
+                }
+                setTimeout(() => {
+                    currentIdx++;
+                    if(currentIdx < questions.length) loadQ();
+                    else { alert("टेस्ट पूरा हुआ!"); location.reload(); }
+                }, 1500);
+            };
+            box.appendChild(b);
+        });
+    }
+</script>
+
+</body>
+</html>
